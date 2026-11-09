@@ -1,0 +1,32 @@
+name: Set up SiteSquatch
+description: Install a prebuilt ssqch (SiteSquatch, a static site generator) and add it to the PATH.
+author: reverentgeek
+branding:
+  icon: download
+  color: green
+
+inputs:
+  version:
+    description: The ssqch version to install, like 0.3.0, or latest.
+    default: latest
+  token:
+    description: A GitHub token, used to look up the latest release without hitting the API rate limit.
+    default: ${{ github.token }}
+
+outputs:
+  version:
+    description: The version that was installed, like 0.3.0.
+    value: ${{ steps.install.outputs.version }}
+  path:
+    description: The folder that holds the ssqch binary.
+    value: ${{ steps.install.outputs.path }}
+
+runs:
+  using: composite
+  steps:
+    - id: install
+      shell: bash
+      env:
+        VERSION: ${{ inputs.version }}
+        TOKEN: ${{ inputs.token }}
+      run: bash "$GITHUB_ACTION_PATH/install.sh"

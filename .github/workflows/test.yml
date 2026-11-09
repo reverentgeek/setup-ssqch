@@ -1,0 +1,38 @@
+name: Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, macos-15-intel, windows-latest]
+        version: [latest, 0.2.7]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: ssqch
+        uses: ./
+        with:
+          version: ${{ matrix.version }}
+      - name: Check the installed version
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "installed ${{ steps.ssqch.outputs.version }} in ${{ steps.ssqch.outputs.path }}"
+          ssqch --version
+          ssqch --version | grep -qx "ssqch ${{ steps.ssqch.outputs.version }}"
+          if [ "${{ matrix.version }}" != latest ]; then [ "${{ steps.ssqch.outputs.version }}" = "${{ matrix.version }}" ]; fi
+      - name: Build a starter site
+        shell: bash
+        run: ssqch init site && ssqch build --root site && test -f site/dist/index.html
+      - name: Reuse the tool cache
+        id: again
+        uses: ./
+        with:
+          version: ${{ steps.ssqch.outputs.version }}
